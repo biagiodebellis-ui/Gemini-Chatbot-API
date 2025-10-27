@@ -20,11 +20,16 @@ else:
         print(f"ERRORE CRITICO: Impossibile inizializzare il client Gemini con la chiave fornita: {e}")
 
 app = Flask(__name__)
-CORS(app) 
+
+# --- CORREZIONE CORS CRITICA PER ALTERVISTA (Fix Errore di Rete) ---
+# Autorizza ESATTAMENTE il tuo dominio Altervista a inviare richieste all'API di Render
+FRONTEND_URL = "https://usamangiabevi.altervista.org" 
+CORS(app, resources={r"/*": {"origins": FRONTEND_URL}})
+# -------------------------------------------------------------------
 
 # --- 2. PROMPT DI SISTEMA (AURA) ---
 
-# DOMINIO AZIENDALE INSERITO QUI:
+# Dominio aziendale utilizzato per limitare la ricerca (RAG mirato)
 DOMINIO_AZIENDALE_PER_RICERCA = "site:usamangiabevi.altervista.org"
 
 CONTENUTO_AZIENDALE = f"""
