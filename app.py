@@ -91,23 +91,25 @@ def chat():
         if not user_message:
             return jsonify({'error': 'Nessun messaggio fornito'}), 400
 
-        # ********** FIX ERRORE API: Passaggio system_instruction tramite config **********
+        # ********** FIX ERRORE API: Passaggio system_instruction corretto **********
+        
         # 1. Creiamo l'oggetto SystemInstruction
         system_instruction = types.SystemInstruction(content=CONTENUTO_AZIENDALE)
 
         # 2. CONFIGURAZIONE: Abilitiamo il tool di ricerca e le istruzioni di sistema
         tool_config = types.GenerateContentConfig(
             tools=[{"google_search": {}}],
-            system_instruction=system_instruction  # PASSAGGIO CORRETTO del prompt
+            system_instruction=system_instruction
         )
-        # ******************************************************************************
-
+        
+        # 3. Chiamiamo l'API, passando la configurazione completa.
         gemini_response = client.models.generate_content(
             model='gemini-2.5-flash',
             contents=[user_message],
-            config=tool_config, 
-            # NON INSERIRE QUI system_instruction o system_instruction=CONTENUTO_AZIENDALE
+            config=tool_config
+            # NON c'è system_instruction qui, risolvendo l'errore del log.
         )
+        # ************************************************************
 
         return jsonify({'response': gemini_response.text}), 200
 
