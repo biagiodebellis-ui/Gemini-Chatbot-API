@@ -9,7 +9,7 @@ from google.genai.errors import APIError
 API_KEY = os.getenv('API_KEY')
 
 if not API_KEY:
-    # Questa eccezione è fondamentale per sapere se la chiave non è stata caricata
+    # Eccezione che si attiva se la variabile d'ambiente non è impostata
     raise ValueError("L'ambiente API_KEY non è stato trovato. Assicurati che sia impostato su Render.")
 
 try:
@@ -42,7 +42,7 @@ RESTRIZIONI ASSOLUTE:
 # Configurazione del modello con il Prompt di Sistema
 MODEL_CONFIG = {
     "system_instruction": CONTENUTO_AZIENDALE,
-    "temperature": 0.5  # Livello di creatività moderato
+    "temperature": 0.5
 }
 
 # --- 3. ENDPOINT FLASK ---
@@ -52,16 +52,14 @@ def home():
     """
     Endpoint principale che serve la pagina HTML del chatbot.
     """
-    # Questo cerca 'index.html' nella cartella 'templates'
     return render_template('index.html')
 
 @app.route('/chat', methods=['POST', 'OPTIONS'])
 def chat():
     """
     Endpoint API che gestisce la comunicazione con l'API Gemini.
-    Gestisce anche le richieste OPTIONS (pre-flight) per il CORS.
     """
-    # Imposta gli header CORS per consentire l'accesso da domini esterni (come Altervista)
+    # Imposta gli header CORS (essenziali per Altervista)
     response_headers = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type',
@@ -81,12 +79,12 @@ def chat():
 
         # Esegue la chiamata all'API Gemini
         gemini_response = client.models.generate_content(
-            model='gemini-2.5-flash', # Veloce ed efficiente
+            model='gemini-2.5-flash',
             contents=[user_message],
             config=MODEL_CONFIG
         )
 
-        # Restituisce la risposta di Aura in formato JSON
+        # Restituisce la risposta di Aura
         return jsonify({'response': gemini_response.text}), 200
 
     except APIError as e:
@@ -97,5 +95,4 @@ def chat():
         return jsonify({'error': 'Errore interno del server. Riprova più tardi.'}), 500
 
 if __name__ == '__main__':
-    # Esecuzione in locale
     app.run(debug=True, host='0.0.0.0', port=5000)
