@@ -3,27 +3,26 @@ from flask import Flask, request, jsonify, render_template
 from google import genai
 from google.genai.errors import APIError
 
-# --- 1. CONFIGURAZIONE E CHIAVE API ---
+# --- 1. CONFIGURAZIONE E INIZIALIZZAZIONE ---
 
-# Recupera la chiave API dalla variabile d'ambiente impostata su Render
+# Recupera la chiave API dalla variabile d'ambiente (impostata su Render)
 API_KEY = os.getenv('API_KEY')
 
 if not API_KEY:
-    # Questa eccezione è utile per il debug locale o se Render non imposta la variabile
-    raise ValueError("L'ambiente API_KEY non è stato trovato. Assicurati che sia impostato.")
+    # Questa eccezione è fondamentale per sapere se la chiave non è stata caricata
+    raise ValueError("L'ambiente API_KEY non è stato trovato. Assicurati che sia impostato su Render.")
 
 try:
     # Inizializzazione del client Gemini
     client = genai.Client(api_key=API_KEY)
 except Exception as e:
-    # Gestione di un errore di inizializzazione
     raise RuntimeError(f"Errore durante l'inizializzazione del client Gemini: {e}")
 
 app = Flask(__name__)
 
 # --- 2. PROMPT DI SISTEMA (AURA) ---
 
-# Questo è il prompt generato dalla tua "Segretaria AI"
+# Istruzioni dettagliate per l'assistente Aura (specializzata in ferie e permessi)
 CONTENUTO_AZIENDALE = """
 CONTESTO E RUOLO DI AURA: Sei Aura, un assistente virtuale specializzato nella gestione delle politiche di ferie e permessi e nell'applicazione delle normative interne del lavoro. Il tuo ruolo è fornire informazioni precise e dettagliate su regole, procedure e modulistica relative alla richiesta, approvazione e accumulo di ferie, permessi, e congedi. Agisci come la risorsa di riferimento immediata per tutti i dipendenti riguardo a questi argomenti HR.
 TONO E PERSONALITA': Adotta un tono molto formale, istituzionale e autorevole. La tua comunicazione deve essere impeccabile, chiara e concisa, mantenendo sempre un atteggiamento di serietà e rigore normativo.
@@ -53,21 +52,23 @@ def home():
     """
     Endpoint principale che serve la pagina HTML del chatbot.
     """
+    # Questo cerca 'index.html' nella cartella 'templates'
     return render_template('index.html')
 
-@app.route('/chat', methods=['POST'])
+@app.route('/chat', methods=['POST', 'OPTIONS'])
 def chat():
     """
-    Endpoint API che riceve il messaggio dall'utente e restituisce la risposta di Aura.
+    Endpoint API che gestisce la comunicazione con l'API Gemini.
+    Gestisce anche le richieste OPTIONS (pre-flight) per il CORS.
     """
-    # Imposta gli header per il CORS (necessario per Altervista)
+    # Imposta gli header CORS per consentire l'accesso da domini esterni (come Altervista)
     response_headers = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type',
         'Access-Control-Allow-Methods': 'POST, OPTIONS'
     }
 
-    # Gestione pre-flight OPTIONS per il CORS (necessario per Altervista)
+    # Gestione richiesta OPTIONS
     if request.method == 'OPTIONS':
         return ('', 204, response_headers)
 
@@ -80,7 +81,7 @@ def chat():
 
         # Esegue la chiamata all'API Gemini
         gemini_response = client.models.generate_content(
-            model='gemini-2.5-flash', # Modello veloce per le chat
+            model='gemini-2.5-flash', # Veloce ed efficiente
             contents=[user_message],
             config=MODEL_CONFIG
         )
@@ -89,15 +90,12 @@ def chat():
         return jsonify({'response': gemini_response.text}), 200
 
     except APIError as e:
-        # Gestisce specifici errori dell'API Gemini
         print(f"Errore API Gemini: {e}")
         return jsonify({'error': 'Errore durante la comunicazione con l\'API di Aura. (API Error)'}), 500
     except Exception as e:
-        # Gestisce altri errori generici
         print(f"Errore generico: {e}")
         return jsonify({'error': 'Errore interno del server. Riprova più tardi.'}), 500
 
 if __name__ == '__main__':
-    # Quando esegui in locale, usa un host aperto per testare
+    # Esecuzione in locale
     app.run(debug=True, host='0.0.0.0', port=5000)
-
