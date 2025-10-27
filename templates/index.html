@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aura - Assistente Aziendale</title>
     <style>
-        /* Stile base per la chat (rimane invariato) */
+        /* Stile base per la chat */
         body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f9; }
         .chat-container { max-width: 600px; margin: 50px auto; background: white; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: flex; flex-direction: column; height: 70vh; }
         .chat-messages { flex-grow: 1; padding: 20px; overflow-y: auto; border-bottom: 1px solid #eee; }
@@ -30,10 +30,9 @@
     </div>
 
     <script>
-        // *** PUNTO CRITICO: INSERISCI QUI L'URL REALE DI RENDER ***
+        // *** IMPORTANTE: VERIFICA CHE QUESTO URL SIA CORRETTO ***
         const API_URL = "https://biagio-bot-api.onrender.com/chat"; 
-        // L'URL di Render è https://biagio-bot-api.onrender.com
-        // DEVE FINIRE CON /chat
+        // Se il tuo URL è diverso, modifica solo la parte https://...onrender.com
 
         const chatMessages = document.getElementById('chat-messages');
         const userInput = document.getElementById('user-input');
@@ -52,11 +51,9 @@
             const message = userInput.value.trim();
             if (message === "") return;
 
-            // 1. Aggiunge il messaggio utente
             appendMessage('user', message);
             userInput.value = '';
 
-            // 2. Messaggio di attesa aggiornato per Aura
             const loadingMessage = document.createElement('div');
             loadingMessage.classList.add('message', 'bot-message');
             loadingMessage.id = 'loading';
@@ -65,7 +62,7 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
 
             try {
-                // 3. Chiama l'API Flask su Render
+                // Chiama l'API Flask su Render
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: {
@@ -75,19 +72,19 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error(`Errore HTTP: ${response.status}`);
+                    // Cattura errori HTTP (404, 500, ecc.)
+                    throw new Error(`Errore HTTP: ${response.status}. Controlla i log di Render.`);
                 }
 
                 const data = await response.json();
                 
-                // 4. Rimuove l'attesa e aggiunge la risposta del bot
                 loadingMessage.remove(); 
                 appendMessage('bot', data.response);
 
             } catch (error) {
                 console.error("Errore durante la chiamata API:", error);
                 loadingMessage.remove(); 
-                appendMessage('bot', 'Scusa, si è verificato un errore durante la comunicazione con Aura. (Verifica l\'URL API o i log di Render)');
+                appendMessage('bot', 'Errore di rete. Impossibile comunicare con il server Aura. Controlla la console del browser per i dettagli.');
             }
         }
     </script>
