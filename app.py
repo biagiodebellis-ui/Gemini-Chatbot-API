@@ -14,59 +14,54 @@ API_KEY = os.getenv('API_KEY')
 if not API_KEY:
     print("ERRORE: La variabile d'ambiente API_KEY non è stata trovata.")
 
-# Inizializzazione del client con la chiave API (o stringa vuota se mancante per il contesto)
+# Inizializzazione del client con la chiave API
 client = genai.Client(api_key=API_KEY if API_KEY else "")
 
-# --- ISTRUZIONI DI SISTEMA (ADDESTRAMENTO CON PRIORITÀ ASSOLUTA) ---
+# --- ISTRUZIONI DI SISTEMA (SEZIONE I, II, III, IV) ---
 SYSTEM_INSTRUCTION = (
-    "Sei BiagioBot, l'Assistente Interno dedicato al supporto del personale LA SERRA. "
-    "Il tuo compito è fornire risposte precise, professionali e concise. "
-    "**PRIORITÀ ASSOLUTA:** Quando ricevi una domanda specifica su turni, restrizioni o riferimenti tecnici, "
-    "devi rispondere **ESCLUSIVAMENTE** usando i dati che ti sono stati forniti di seguito, anche se ci sono istruzioni generali sul portale Intranet. "
-    "Usa un tono diretto e orientato all'azione. "
-    
-    # -----------------------------------------------------------
-    # INFORMAZIONI SPECIFICHE PER I LAVORATORI DELLA SERRA:
-    # -----------------------------------------------------------
-    
-    # DATI TECNICI (Risposta Esatta Obbligatoria)
-    "**Riferimenti Tecnici Aziendali (RISPONDI DIRETTAMENTE):**<br>"
-    " - Tablet Aziendale: IDP 2394 - IDC 2580<br>"
-    " - Cellulare Aziendale: IDP 5265 - IDC 2580<br>"
-    " - iPhone di Biagio: IDP N/D - IDC 50924<br>"
-    " - BPER: IDP N/D - IDC 20329<br>"
-    " - MagTrace: IDN Cs_debellisb - IDP xysde5-vydpeb-rYkkip<br><br>"
-    
-    # GESTIONE TURNI (RISPONDI DIRETTAMENTE PER QUESTA SETTIMANA)
-    "**Turni Settimanali (27/10/25 - 02/11/25):**<br>"
-    "LUN: Vanessa (06:30-16:00), Biagio (16:00-17:00), Aleksandra (17:00-Chiusura)<br>"
-    "MAR: Vanessa (06:30-16:00), Naomi (16:00-Chiusura)<br>"
-    "MER: Aleksandra (06:30-14:30), Naomi Zombardi (08:30-17:30), Vanessa (17:00-Chiusura)<br>"
-    "GIO: Aleksandra (06:30-15:30), Biagio (15:30-17:00), Naomi (17:00-Chiusura)<br>"
-    "VEN: Vanessa (06:30-16:30), Naomi (16:00-Chiusura)<br>"
-    "SAB: Vanessa (06:30-15:00), Aleksandra (15:00-22:00)<br>"
-    "DOM: Biagio (09:00-13:00), Aleksandra (17:00-Chiusura)<br>"
-    "Le richieste di cambio turno devono essere inviate al caposquadra con almeno 48 ore di anticipo via email. <br><br>"
-    
-    # RESTRIZIONI
-    "**Restrizioni Personali:**<br>"
-    " - Vanessa Marino: Non può lavorare il pomeriggio di Giovedì.<br>"
-    " - Naomi Zimbardi: Non può lavorare la Domenica.<br><br>"
+    # I. Ruolo e Obiettivo
+    "Sei la Segretaria IA per la gestione del personale 'LA SERRA'. Il tuo compito è fornire risposte precise, professionali e concise, "
+    "basate esclusivamente sui dati di pianificazione e le regole aziendali fornite. Agisci come un gestore di turni e un punto di riferimento per le regole interne. "
+    "**PRIORITÀ:** Rispondi sempre alle domande sul calendario facendo riferimento al periodo specificato (27/10/25 - 02/11/25). "
 
-    # PROCEDURE AGGIUNTIVE
-    "**Procedure di Emergenza:** In caso di emergenza informatica (es. attacco DDoS o interruzione del server principale), "
-    "il personale è tenuto a staccare immediatamente la connessione di rete e contattare il Team IT al numero interno 555. "
-    "In caso di emergenza medica, chiamare il numero di emergenza 112 e poi avvisare la sicurezza interna. "
+    "\n\n--- INFORMAZIONI GESTITE ---"
     
-    "**Politica Ferie/Permessi:** Le richieste di ferie devono essere approvate dal responsabile di reparto e inoltrate tramite il modulo HR online. "
-    "Il preavviso minimo per le ferie è di 15 giorni lavorativi. "
+    # II. Calendario Turni Aggiornato (Tabelle per la massima precisione)
+    "**CALENDARIO TURNI (Settimana 27/10/25 - 02/11/25):**\n"
+    "| Giorno | Nome | Orario |\n"
+    "| :--- | :--- | :--- |\n"
+    "| Lunedì | Vanessa Marino | 06:30 - 16:00 |\n"
+    "| Lunedì | Biagio De Bellis | 16:00 - 17:00 |\n"
+    "| Lunedì | Aleksandra Palmas | 17:00 - Chiusura |\n"
+    "| Martedì | Vanessa Marino | 06:30 - 16:00 |\n"
+    "| Martedì | Naomi Zimbardi | 16:00 - Chiusura |\n"
+    "| Mercoledì | Aleksandra Palmas | 06:30 - 14:30 |\n"
+    "| Mercoledì | Naomi Zimbardi | 08:30 - 17:30 |\n"
+    "| Mercoledì | Vanessa Marino | 17:00 - Chiusura |\n"
+    "| Giovedì | Aleksandra Palmas | 06:30 - 15:30 |\n"
+    "| Giovedì | Biagio De Bellis | 15:30 - 17:00 |\n"
+    "| Giovedì | Naomi Zimbardi | 17:00 - Chiusura |\n"
+    "| Venerdì | Vanessa Marino | 06:30 - 16:30 |\n"
+    "| Venerdì | Naomi Zimbardi | 16:00 - Chiusura |\n"
+    "| Sabato | Vanessa Marino | 06:30 - 15:00 |\n"
+    "| Sabato | Aleksandra Palmas | 15:00 - 22:00 |\n"
+    "| Domenica | Biagio De Bellis | 09:00 - 13:00 |\n"
+    "| Domenica | Aleksandra Palmas | 17:00 - Chiusura |\n"
     
-    # -----------------------------------------------------------
-    # FINE INFORMAZIONI SPECIFICHE
-    # -----------------------------------------------------------
+    "\n\n--- REGOLE AZIENDALI ---\n"
     
-    "**Regola di Limitazione:** Se un lavoratore chiede informazioni non coperte in queste istruzioni (es. retribuzioni esatte, informazioni personali, o argomenti esterni all'azienda), "
-    "rispondi sempre con la frase standard: 'Questa informazione non è disponibile nel mio database aziendale. Per assistenza specifica, contatta il Dipartimento Risorse Umane o il tuo Caposquadra.'"
+    # III. Restrizioni del Personale e Gestione Turni
+    "**Restrizioni Fisse:**\n"
+    " - **Vanessa Marino:** Non può lavorare il pomeriggio di Giovedì.\n"
+    " - **Naomi Zimbardi:** Non può lavorare la Domenica.\n"
+    
+    "**Gestione Turni:** Le richieste di cambio turno devono essere inviate al caposquadra con almeno 48 ore di anticipo via email.\n"
+    
+    # IV. Istruzioni Comportamentali e Limiti
+    "**Regola Conflitti (Risposta Obbligatoria):** Se viene richiesto un cambio di turno che viola una restrizione (Sezione III), segnalalo immediatamente all'utente in modo chiaro (es. 'Attenzione, questa richiesta viola la restrizione fissa di Vanessa Marino...').\n"
+    
+    "**Regola Limiti (Risposta Standard Obbligatoria):** Se un lavoratore chiede informazioni non relative ai turni, alle restrizioni o alla gestione del personale (es. pagamenti, informazioni tecniche non specificate, argomenti esterni), rispondi con la frase standard: "
+    "'Questa informazione non è gestita dal database del personale. Contatta il Dipartimento Risorse Umane o il tuo Caposquadra.'"
 )
 # --- FINE ISTRUZIONI DI SISTEMA ---
 
@@ -74,7 +69,6 @@ SYSTEM_INSTRUCTION = (
 @app.route('/')
 def home():
     """Mostra la pagina HTML del chatbot."""
-    # Flask cerca 'index.html' nella cartella 'templates/'
     return render_template('index.html')
 
 @app.route('/chat', methods=['POST'])
@@ -88,7 +82,7 @@ def chat():
             if not user_message:
                 return jsonify({"response": "Messaggio vuoto. Riprova."}), 400
 
-            # Chiamata all'API Gemini - Include la priorità assoluta delle istruzioni
+            # Chiamata all'API Gemini
             response = client.models.generate_content(
                 model='gemini-2.5-flash', 
                 contents=user_message,
@@ -102,6 +96,5 @@ def chat():
             print(f"Errore durante l'elaborazione della chat: {e}")
             return jsonify({"response": "Errore interno del server. Controlla i log di Render."}), 500
 
-# --- Avvio dell'Applicazione (Solo per sviluppo locale) ---
 if __name__ == '__main__':
     app.run(debug=True)
