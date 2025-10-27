@@ -22,14 +22,12 @@ else:
 app = Flask(__name__)
 
 # --- CORREZIONE CORS CRITICA PER ALTERVISTA (Fix Errore di Rete) ---
-# Autorizza ESATTAMENTE il tuo dominio Altervista a inviare richieste all'API di Render
 FRONTEND_URL = "https://usamangiabevi.altervista.org" 
 CORS(app, resources={r"/*": {"origins": FRONTEND_URL}})
 # -------------------------------------------------------------------
 
 # --- 2. PROMPT DI SISTEMA (AURA) ---
 
-# Dominio aziendale utilizzato per limitare la ricerca (RAG mirato)
 DOMINIO_AZIENDALE_PER_RICERCA = "site:usamangiabevi.altervista.org"
 
 CONTENUTO_AZIENDALE = f"""
@@ -91,25 +89,23 @@ def chat():
         if not user_message:
             return jsonify({'error': 'Nessun messaggio fornito'}), 400
 
-        # ********** FIX ERRORE API: Passaggio system_instruction corretto **********
+        # *** FIX ESTREMO: Incorporiamo il Prompt nel Messaggio (Compatibilità Massima) ***
         
-        # 1. Creiamo l'oggetto SystemInstruction
-        system_instruction = types.SystemInstruction(content=CONTENUTO_AZIENDALE)
+        # 1. Combiniamo le istruzioni aziendali con il messaggio dell'utente
+        full_prompt = CONTENUTO_AZIENDALE + "\n\n" + "Domanda dell'utente: " + user_message
 
-        # 2. CONFIGURAZIONE: Abilitiamo il tool di ricerca e le istruzioni di sistema
+        # 2. CONFIGURAZIONE: Abilitiamo solo il tool di ricerca (senza system_instruction)
         tool_config = types.GenerateContentConfig(
-            tools=[{"google_search": {}}],
-            system_instruction=system_instruction
+            tools=[{"google_search": {}}]
         )
         
-        # 3. Chiamiamo l'API, passando la configurazione completa.
+        # 3. Chiamiamo l'API usando il prompt combinato come contenuto
         gemini_response = client.models.generate_content(
             model='gemini-2.5-flash',
-            contents=[user_message],
+            contents=[full_prompt], 
             config=tool_config
-            # NON c'è system_instruction qui, risolvendo l'errore del log.
         )
-        # ************************************************************
+        # *******************************************************************
 
         return jsonify({'response': gemini_response.text}), 200
 
