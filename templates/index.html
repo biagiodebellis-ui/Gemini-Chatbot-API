@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BiagioBot - Chatbot Aziendale</title>
+    <title>Aura - Assistente Aziendale</title>
     <style>
-        /* Stile base per la chat */
+        /* Stile base per la chat (rimane invariato) */
         body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f9; }
         .chat-container { max-width: 600px; margin: 50px auto; background: white; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: flex; flex-direction: column; height: 70vh; }
         .chat-messages { flex-grow: 1; padding: 20px; overflow-y: auto; border-bottom: 1px solid #eee; }
@@ -13,7 +13,6 @@
         .chat-input input[type="text"] { flex-grow: 1; padding: 10px; border: 1px solid #ddd; border-radius: 20px 0 0 20px; outline: none; }
         .chat-input button { padding: 10px 15px; border: none; background-color: #007bff; color: white; cursor: pointer; border-radius: 0 20px 20px 0; transition: background-color 0.3s; }
         .chat-input button:hover { background-color: #0056b3; }
-        /* Stili per i messaggi */
         .message { margin-bottom: 15px; max-width: 80%; padding: 10px; border-radius: 15px; clear: both; }
         .user-message { background-color: #dcf8c6; float: right; margin-left: auto; }
         .bot-message { background-color: #ffffff; border: 1px solid #e0e0e0; float: left; }
@@ -22,7 +21,7 @@
 <body>
     <div class="chat-container">
         <div class="chat-messages" id="chat-messages">
-            <div class="message bot-message">Ciao! Sono BiagioBot, il tuo assistente aziendale. Chiedimi pure!</div>
+            <div class="message bot-message">Ciao! Sono **Aura**, la tua Assistente Specializzata in Ferie e Permessi. Come posso aiutarti oggi?</div>
         </div>
         <div class="chat-input">
             <input type="text" id="user-input" placeholder="Scrivi il tuo messaggio..." onkeypress="if(event.keyCode == 13) sendMessage()">
@@ -31,8 +30,10 @@
     </div>
 
     <script>
-        // *** QUESTO E' L'URL PUBBLICO FINALE CHE PUNTA ALLA TUA API SU RENDER ***
+        // *** PUNTO CRITICO: INSERISCI QUI L'URL REALE DI RENDER ***
         const API_URL = "https://biagio-bot-api.onrender.com/chat"; 
+        // L'URL di Render è https://biagio-bot-api.onrender.com
+        // DEVE FINIRE CON /chat
 
         const chatMessages = document.getElementById('chat-messages');
         const userInput = document.getElementById('user-input');
@@ -41,24 +42,25 @@
             const messageDiv = document.createElement('div');
             messageDiv.classList.add('message');
             messageDiv.classList.add(sender === 'user' ? 'user-message' : 'bot-message');
-            messageDiv.textContent = text;
+            // Gestione markdown leggero per il messaggio di benvenuto di Aura
+            messageDiv.innerHTML = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight; // Scorri fino all'ultimo messaggio
+            chatMessages.scrollTop = chatMessages.scrollHeight; 
         }
 
         async function sendMessage() {
             const message = userInput.value.trim();
             if (message === "") return;
 
-            // 1. Aggiunge il messaggio utente alla chat
+            // 1. Aggiunge il messaggio utente
             appendMessage('user', message);
-            userInput.value = ''; // Pulisce l'input
+            userInput.value = '';
 
-            // 2. Mostra un messaggio di attesa
+            // 2. Messaggio di attesa aggiornato per Aura
             const loadingMessage = document.createElement('div');
             loadingMessage.classList.add('message', 'bot-message');
             loadingMessage.id = 'loading';
-            loadingMessage.textContent = 'BiagioBot sta pensando...';
+            loadingMessage.textContent = 'Aura sta cercando la normativa...';
             chatMessages.appendChild(loadingMessage);
             chatMessages.scrollTop = chatMessages.scrollHeight;
 
@@ -78,14 +80,14 @@
 
                 const data = await response.json();
                 
-                // 4. Rimuove il messaggio di attesa e aggiunge la risposta del bot
+                // 4. Rimuove l'attesa e aggiunge la risposta del bot
                 loadingMessage.remove(); 
                 appendMessage('bot', data.response);
 
             } catch (error) {
                 console.error("Errore durante la chiamata API:", error);
                 loadingMessage.remove(); 
-                appendMessage('bot', 'Scusa, si è verificato un errore durante la comunicazione. Riprova più tardi.');
+                appendMessage('bot', 'Scusa, si è verificato un errore durante la comunicazione con Aura. (Verifica l\'URL API o i log di Render)');
             }
         }
     </script>
