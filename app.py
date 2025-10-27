@@ -61,7 +61,7 @@ SYSTEM_INSTRUCTION = (
     "**Regola Conflitti (Risposta Obbligatoria):** Se viene richiesto un cambio di turno che viola una restrizione (Sezione III), segnalalo immediatamente all'utente in modo chiaro (es. 'Attenzione, questa richiesta viola la restrizione fissa di Vanessa Marino...').\n"
     
     "**Regola Limiti (Risposta Standard Obbligatoria):** Se un lavoratore chiede informazioni non relative ai turni, alle restrizioni o alla gestione del personale (es. pagamenti, informazioni tecniche non specificate, argomenti esterni), rispondi con la frase standard: "
-    "'Questa informazione non è gestita dal database del personale. Contatta il Dipartimento Risorse Umane o il tuo Caposquadra.'"
+    "'Eventuali documenti possono essere trovati nella sezione personale accedendo tramite login.'"
 )
 # --- FINE ISTRUZIONI DI SISTEMA ---
 
