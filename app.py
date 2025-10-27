@@ -1,11 +1,12 @@
 import os
 from flask import Flask, request, jsonify, render_template
+# AGGIUNTO: Importa la libreria CORS
+from flask_cors import CORS 
 from google import genai
 from google.genai.errors import APIError
 
 # --- 1. CONFIGURAZIONE E INIZIALIZZAZIONE ---
 
-# Recupera la chiave API dalla variabile d'ambiente (impostata su Render)
 API_KEY = os.getenv('API_KEY')
 
 if not API_KEY:
@@ -17,6 +18,8 @@ except Exception as e:
     raise RuntimeError(f"Errore durante l'inizializzazione del client Gemini: {e}")
 
 app = Flask(__name__)
+# AGGIUNTO: Inizializza CORS per TUTTI gli endpoint, consentendo l'accesso da qualsiasi origine ('*')
+CORS(app) 
 
 # --- 2. PROMPT DI SISTEMA (AURA) ---
 
@@ -47,26 +50,16 @@ MODEL_CONFIG = {
 @app.route('/')
 def home():
     """
-    Endpoint principale che serve la pagina HTML del chatbot (per test).
+    Endpoint principale che serve la pagina HTML del chatbot.
     """
     return render_template('index.html')
 
-@app.route('/chat', methods=['POST', 'OPTIONS'])
+# NESSUNA MODIFICA CORS NECESSARIA QUI GRAZIE A CORS(app)
+@app.route('/chat', methods=['POST'])
 def chat():
     """
     Endpoint API per la chat.
     """
-    # Imposta gli header CORS (essenziali per Altervista)
-    response_headers = {
-        'Access-Control-Allow-Origin': '*', # Consente a Altervista di accedere
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS'
-    }
-
-    # Gestione richiesta OPTIONS
-    if request.method == 'OPTIONS':
-        return ('', 204, response_headers)
-
     try:
         data = request.get_json()
         user_message = data.get('message')
