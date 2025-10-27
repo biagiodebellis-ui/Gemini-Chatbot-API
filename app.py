@@ -13,16 +13,11 @@ CORS(app)
 API_KEY = os.getenv('API_KEY')
 
 if not API_KEY:
-    # Se la chiave non è impostata (solo per test locali se non usi dotenv)
+    # Se la chiave non è impostata (non dovrebbe accadere su Render)
     print("ERRORE: La variabile d'ambiente API_KEY non è stata trovata.")
-    # Potresti voler uscire o lanciare un'eccezione qui in produzione.
 
+# Inizializza il client Gemini con la chiave API
 client = genai.Client(api_key=API_KEY)
-
-# Modello da usare per la chat
-MODEL = 'gemini-2.5-flash' 
-# Inizializzazione del modello
-model = client.models.get(name=MODEL)
 
 # --- Rotte dell'Applicazione ---
 
@@ -45,7 +40,7 @@ def chat():
 
             # Chiamata all'API Gemini
             response = client.models.generate_content(
-                model=MODEL,
+                model='gemini-2.5-flash', # Modello specificato qui
                 contents=user_message
             )
             
@@ -59,6 +54,4 @@ def chat():
 
 # --- Avvio dell'Applicazione (Solo per sviluppo locale) ---
 if __name__ == '__main__':
-    # Gunicorn gestisce l'avvio su Render, quindi questa parte non viene eseguita lì.
-    # Utile solo per testare in locale prima del deploy.
     app.run(debug=True)
