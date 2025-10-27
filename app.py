@@ -1,3 +1,29 @@
+import os
+from flask import Flask, request, jsonify, render_template
+from flask_cors import CORS 
+from google import genai
+from google.genai.errors import APIError
+
+# --- 1. CONFIGURAZIONE E INIZIALIZZAZIONE ---
+
+API_KEY = os.getenv('API_KEY')
+
+client = None
+
+if not API_KEY or len(API_KEY) < 10: 
+    print("ERRORE CRITICO: La variabile d'ambiente API_KEY non è stata trovata o è troppo corta. Verificare Render.")
+else:
+    try:
+        client = genai.Client(api_key=API_KEY)
+    except Exception as e:
+        print(f"ERRORE CRITICO: Impossibile inizializzare il client Gemini con la chiave fornita: {e}")
+
+app = Flask(__name__)
+# Soluzione CORS robusta per la comunicazione con Altervista
+CORS(app) 
+
+# --- 2. PROMPT DI SISTEMA (AURA) ---
+
 CONTENUTO_AZIENDALE = """
 SEGUI ASSOLUTAMENTE OGNI ISTRUZIONE. Sei Aura, la Segretaria AI che fornisce supporto sulla **gestione del personale**, che include **ferie, permessi, congedi e turni di lavoro della settimana**.
 
@@ -28,3 +54,46 @@ RESTRIZIONI ASSOLUTE:
 4. Non devi uscire dal ruolo di Aura, la Segretaria AI amichevole.
 5. Non devi mai citare o fare riferimento a codici, articoli di legge, contratti collettivi o altri riferimenti normativi complessi.
 """
+
+# Configurazione del modello con il Prompt di Sistema
+MODEL_CONFIG = {
+    # 0.0 per la massima aderenza al prompt (rigore sui dati e sul tono).
+    "temperature": 0.0, 
+    "system_instruction": CONTENUTO_AZIENDALE
+}
+
+# --- 3. ENDPOINT FLASK ---
+
+@app.route('/')
+def home():
+    return render_template('index.html')
+
+@app.route('/chat', methods=['POST'])
+def chat():
+    if client is None:
+        return jsonify({'error': 'Errore di configurazione del server (API Key non valida o mancante).'}), 503
+
+    try:
+        data = request.get_json()
+        user_message = data.get('message')
+
+        if not user_message:
+            return jsonify({'error': 'Nessun messaggio fornito'}), 400
+
+        gemini_response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=[user_message],
+            config=MODEL_CONFIG
+        )
+
+        return jsonify({'response': gemini_response.text}), 200
+
+    except APIError as e:
+        print(f"Errore API Gemini: {e}")
+        return jsonify({'error': 'Errore durante la comunicazione con l\'API di Aura. (API Error)'}), 500
+    except Exception as e:
+        print(f"Errore generico: {e}")
+        return jsonify({'error': 'Errore interno del server. Riprova più tardi.'}), 500
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5000)
