@@ -9,50 +9,51 @@ app = Flask(__name__)
 CORS(app) 
 
 # --- Configurazione Gemini API ---
-# In un ambiente di produzione, l'API key verrebbe caricata in modo sicuro.
 API_KEY = os.getenv('API_KEY')
 
 if not API_KEY:
     print("ERRORE: La variabile d'ambiente API_KEY non è stata trovata.")
 
-# La chiave è lasciata vuota in questo ambiente di simulazione per la compatibilità
+# Inizializzazione del client con la chiave API (o stringa vuota se mancante per il contesto)
 client = genai.Client(api_key=API_KEY if API_KEY else "")
 
-# --- ISTRUZIONI DI SISTEMA (ADDESTRAMENTO PER I LAVORATORI) ---
+# --- ISTRUZIONI DI SISTEMA (ADDESTRAMENTO CON PRIORITÀ ASSOLUTA) ---
 SYSTEM_INSTRUCTION = (
     "Sei BiagioBot, l'Assistente Interno dedicato al supporto del personale LA SERRA. "
-    "Il tuo compito è fornire risposte precise, professionali e concise, basate esclusivamente sulle regole aziendali e sulle informazioni di seguito. "
-    "Il tuo pubblico è il personale interno, quindi usa un tono diretto e orientato all'azione. "
+    "Il tuo compito è fornire risposte precise, professionali e concise. "
+    "**PRIORITÀ ASSOLUTA:** Quando ricevi una domanda specifica su turni, restrizioni o riferimenti tecnici, "
+    "devi rispondere **ESCLUSIVAMENTE** usando i dati che ti sono stati forniti di seguito, anche se ci sono istruzioni generali sul portale Intranet. "
+    "Usa un tono diretto e orientato all'azione. "
     
     # -----------------------------------------------------------
     # INFORMAZIONI SPECIFICHE PER I LAVORATORI DELLA SERRA:
     # -----------------------------------------------------------
     
     # DATI TECNICI (Risposta Esatta Obbligatoria)
-    "**Riferimenti Tecnici Aziendali:** "
-    " - Tablet Aziendale: IDP 2394 - IDC 2580"
-    " - Cellulare Aziendale: IDP 5265 - IDC 2580"
-    " - iPhone di Biagio: IDP N/D - IDC 50924"
-    " - BPER: IDP N/D - IDC 20329"
-    " - MagTrace: IDN Cs_debellisb - IDP xysde5-vydpeb-rYkkip"
+    "**Riferimenti Tecnici Aziendali (RISPONDI DIRETTAMENTE):**<br>"
+    " - Tablet Aziendale: IDP 2394 - IDC 2580<br>"
+    " - Cellulare Aziendale: IDP 5265 - IDC 2580<br>"
+    " - iPhone di Biagio: IDP N/D - IDC 50924<br>"
+    " - BPER: IDP N/D - IDC 20329<br>"
+    " - MagTrace: IDN Cs_debellisb - IDP xysde5-vydpeb-rYkkip<br><br>"
     
-    # GESTIONE TURNI
-    "**Gestione Turni Settimanali (27/10/25 - 02/11/25):** "
-    "LUN: Vanessa (06:30-16:00), Biagio (16:00-17:00), Aleksandra (17:00-Chiusura)"
-    "MAR: Vanessa (06:30-16:00), Naomi (16:00-Chiusura)"
-    "MER: Aleksandra (06:30-14:30), Naomi Zombardi (08:30-17:30), Vanessa (17:00-Chiusura)"
-    "GIO: Aleksandra (06:30-15:30), Biagio (15:30-17:00), Naomi (17:00-Chiusura)"
-    "VEN: Vanessa (06:30-16:30), Naomi (16:00-Chiusura)"
-    "SAB: Vanessa (06:30-15:00), Aleksandra (15:00-22:00)"
-    "DOM: Biagio (09:00-13:00), Aleksandra (17:00-Chiusura)"
-    "Le richieste di cambio turno devono essere inviate al caposquadra con almeno 48 ore di anticipo via email. "
+    # GESTIONE TURNI (RISPONDI DIRETTAMENTE PER QUESTA SETTIMANA)
+    "**Turni Settimanali (27/10/25 - 02/11/25):**<br>"
+    "LUN: Vanessa (06:30-16:00), Biagio (16:00-17:00), Aleksandra (17:00-Chiusura)<br>"
+    "MAR: Vanessa (06:30-16:00), Naomi (16:00-Chiusura)<br>"
+    "MER: Aleksandra (06:30-14:30), Naomi Zombardi (08:30-17:30), Vanessa (17:00-Chiusura)<br>"
+    "GIO: Aleksandra (06:30-15:30), Biagio (15:30-17:00), Naomi (17:00-Chiusura)<br>"
+    "VEN: Vanessa (06:30-16:30), Naomi (16:00-Chiusura)<br>"
+    "SAB: Vanessa (06:30-15:00), Aleksandra (15:00-22:00)<br>"
+    "DOM: Biagio (09:00-13:00), Aleksandra (17:00-Chiusura)<br>"
+    "Le richieste di cambio turno devono essere inviate al caposquadra con almeno 48 ore di anticipo via email. <br><br>"
     
     # RESTRIZIONI
-    "**Restrizioni Personali:** "
-    " - Vanessa Marino: Non può lavorare il pomeriggio di Giovedì."
-    " - Naomi Zimbardi: Non può lavorare la Domenica."
+    "**Restrizioni Personali:**<br>"
+    " - Vanessa Marino: Non può lavorare il pomeriggio di Giovedì.<br>"
+    " - Naomi Zimbardi: Non può lavorare la Domenica.<br><br>"
 
-    # PROCEDURE AGGIUNTIVE (Mantengo le sezioni generali come richiesto)
+    # PROCEDURE AGGIUNTIVE
     "**Procedure di Emergenza:** In caso di emergenza informatica (es. attacco DDoS o interruzione del server principale), "
     "il personale è tenuto a staccare immediatamente la connessione di rete e contattare il Team IT al numero interno 555. "
     "In caso di emergenza medica, chiamare il numero di emergenza 112 e poi avvisare la sicurezza interna. "
@@ -73,6 +74,7 @@ SYSTEM_INSTRUCTION = (
 @app.route('/')
 def home():
     """Mostra la pagina HTML del chatbot."""
+    # Flask cerca 'index.html' nella cartella 'templates/'
     return render_template('index.html')
 
 @app.route('/chat', methods=['POST'])
@@ -86,13 +88,10 @@ def chat():
             if not user_message:
                 return jsonify({"response": "Messaggio vuoto. Riprova."}), 400
 
-            # Chiamata all'API Gemini - USA IL PROMPT DI SISTEMA AGGIORNATO
+            # Chiamata all'API Gemini - Include la priorità assoluta delle istruzioni
             response = client.models.generate_content(
                 model='gemini-2.5-flash', 
                 contents=user_message,
-                # NOTA: Per un uso reale, si consiglia di non passare l'intera istruzione di sistema 
-                # ad ogni chiamata, ma solo le modifiche o il messaggio utente. Qui viene fatto
-                # per rispettare l'impostazione del codice fornito.
                 config={'system_instruction': SYSTEM_INSTRUCTION} 
             )
             
@@ -101,10 +100,8 @@ def chat():
 
         except Exception as e:
             print(f"Errore durante l'elaborazione della chat: {e}")
-            return jsonify({"response": "Errore interno del server. Controlla i log."}), 500
+            return jsonify({"response": "Errore interno del server. Controlla i log di Render."}), 500
 
+# --- Avvio dell'Applicazione (Solo per sviluppo locale) ---
 if __name__ == '__main__':
-    # ATTENZIONE: Il template 'index.html' deve essere presente nella directory 'templates'
-    # per far funzionare correttamente la funzione home().
-    # La parte di hosting e template non è inclusa nell'output.
     app.run(debug=True)
