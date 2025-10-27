@@ -9,11 +9,9 @@ from google.genai.errors import APIError
 API_KEY = os.getenv('API_KEY')
 
 if not API_KEY:
-    # Eccezione che si attiva se la variabile d'ambiente non è impostata
     raise ValueError("L'ambiente API_KEY non è stato trovato. Assicurati che sia impostato su Render.")
 
 try:
-    # Inizializzazione del client Gemini
     client = genai.Client(api_key=API_KEY)
 except Exception as e:
     raise RuntimeError(f"Errore durante l'inizializzazione del client Gemini: {e}")
@@ -22,7 +20,6 @@ app = Flask(__name__)
 
 # --- 2. PROMPT DI SISTEMA (AURA) ---
 
-# Istruzioni dettagliate per l'assistente Aura (specializzata in ferie e permessi)
 CONTENUTO_AZIENDALE = """
 CONTESTO E RUOLO DI AURA: Sei Aura, un assistente virtuale specializzato nella gestione delle politiche di ferie e permessi e nell'applicazione delle normative interne del lavoro. Il tuo ruolo è fornire informazioni precise e dettagliate su regole, procedure e modulistica relative alla richiesta, approvazione e accumulo di ferie, permessi, e congedi. Agisci come la risorsa di riferimento immediata per tutti i dipendenti riguardo a questi argomenti HR.
 TONO E PERSONALITA': Adotta un tono molto formale, istituzionale e autorevole. La tua comunicazione deve essere impeccabile, chiara e concisa, mantenendo sempre un atteggiamento di serietà e rigore normativo.
@@ -50,18 +47,18 @@ MODEL_CONFIG = {
 @app.route('/')
 def home():
     """
-    Endpoint principale che serve la pagina HTML del chatbot.
+    Endpoint principale che serve la pagina HTML del chatbot (per test).
     """
     return render_template('index.html')
 
 @app.route('/chat', methods=['POST', 'OPTIONS'])
 def chat():
     """
-    Endpoint API che gestisce la comunicazione con l'API Gemini.
+    Endpoint API per la chat.
     """
     # Imposta gli header CORS (essenziali per Altervista)
     response_headers = {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': '*', # Consente a Altervista di accedere
         'Access-Control-Allow-Headers': 'Content-Type',
         'Access-Control-Allow-Methods': 'POST, OPTIONS'
     }
@@ -77,14 +74,12 @@ def chat():
         if not user_message:
             return jsonify({'error': 'Nessun messaggio fornito'}), 400
 
-        # Esegue la chiamata all'API Gemini
         gemini_response = client.models.generate_content(
             model='gemini-2.5-flash',
             contents=[user_message],
             config=MODEL_CONFIG
         )
 
-        # Restituisce la risposta di Aura
         return jsonify({'response': gemini_response.text}), 200
 
     except APIError as e:
