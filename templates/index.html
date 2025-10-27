@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aura - Assistente Aziendale</title>
     <style>
-        /* Stile base per la chat */
+        /* CSS per il design della chat */
         body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f9; }
         .chat-container { max-width: 600px; margin: 50px auto; background: white; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: flex; flex-direction: column; height: 70vh; }
         .chat-messages { flex-grow: 1; padding: 20px; overflow-y: auto; border-bottom: 1px solid #eee; }
@@ -30,9 +30,9 @@
     </div>
 
     <script>
-        // *** IMPORTANTE: VERIFICA CHE QUESTO URL SIA CORRETTO ***
+        // *** PUNTO CRITICO: URL API ***
+        // Se il tuo URL è diverso da https://biagio-bot-api.onrender.com, DEVI MODIFICARE SOLO QUI
         const API_URL = "https://biagio-bot-api.onrender.com/chat"; 
-        // Se il tuo URL è diverso, modifica solo la parte https://...onrender.com
 
         const chatMessages = document.getElementById('chat-messages');
         const userInput = document.getElementById('user-input');
@@ -41,7 +41,6 @@
             const messageDiv = document.createElement('div');
             messageDiv.classList.add('message');
             messageDiv.classList.add(sender === 'user' ? 'user-message' : 'bot-message');
-            // Gestione markdown leggero per il messaggio di benvenuto di Aura
             messageDiv.innerHTML = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             chatMessages.appendChild(messageDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight; 
@@ -72,7 +71,6 @@
                 });
 
                 if (!response.ok) {
-                    // Cattura errori HTTP (404, 500, ecc.)
                     throw new Error(`Errore HTTP: ${response.status}. Controlla i log di Render.`);
                 }
 
@@ -84,7 +82,7 @@
             } catch (error) {
                 console.error("Errore durante la chiamata API:", error);
                 loadingMessage.remove(); 
-                appendMessage('bot', 'Errore di rete. Impossibile comunicare con il server Aura. Controlla la console del browser per i dettagli.');
+                appendMessage('bot', 'Errore di rete. Impossibile comunicare con il server Aura. (Verifica l\'URL API o la console del browser)');
             }
         }
     </script>
