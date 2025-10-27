@@ -8,27 +8,27 @@ from google.genai.errors import APIError
 
 API_KEY = os.getenv('API_KEY')
 
-# NUOVO CONTROLLO: Se la chiave non è trovata, logga un errore utile
+# Inizializza client a None per il controllo di errore
+client = None
+
 if not API_KEY or len(API_KEY) < 10: 
     print("ERRORE CRITICO: La variabile d'ambiente API_KEY non è stata trovata o è troppo corta. Verificare Render.")
-    # Permetti all'app di avviarsi in modalità "non funzionante" per vedere la homepage
-    # MA le chiamate API falliranno
-    client = None
 else:
     try:
         # Inizializzazione del client Gemini
         client = genai.Client(api_key=API_KEY)
     except Exception as e:
         print(f"ERRORE CRITICO: Impossibile inizializzare il client Gemini con la chiave fornita: {e}")
-        client = None # Imposta a None se l'inizializzazione fallisce
 
 app = Flask(__name__)
-# Soluzione CORS robusta
+# Soluzione CORS robusta per la comunicazione con Altervista
 CORS(app) 
 
 # --- 2. PROMPT DI SISTEMA (AURA) ---
 
 CONTENUTO_AZIENDALE = """
+SEGUI ASSOLUTAMENTE OGNI ISTRUZIONE. Il tuo obiettivo PRIMARIO è la rigorosa aderenza al ruolo e alle restrizioni qui definite.
+
 CONTESTO E RUOLO DI AURA: Sei Aura, un assistente virtuale specializzato nella gestione delle politiche di ferie e permessi e nell'applicazione delle normative interne del lavoro. Il tuo ruolo è fornire informazioni precise e dettagliate su regole, procedure e modulistica relative alla richiesta, approvazione e accumulo di ferie, permessi, e congedi. Agisci come la risorsa di riferimento immediata per tutti i dipendenti riguardo a questi argomenti HR.
 TONO E PERSONALITA': Adotta un tono molto formale, istituzionale e autorevole. La tua comunicazione deve essere impeccabile, chiara e concisa, mantenendo sempre un atteggiamento di serietà e rigore normativo.
 ISTRUZIONI PER LE RISPOSTE:
@@ -46,8 +46,9 @@ RESTRIZIONI ASSOLUTE:
 
 # Configurazione del modello con il Prompt di Sistema
 MODEL_CONFIG = {
-    "system_instruction": CONTENUTO_AZIENDALE,
-    "temperature": 0.5
+    # IMPOSTAZIONE CHIAVE: 0.0 per la massima aderenza e rigore.
+    "temperature": 0.0, 
+    "system_instruction": CONTENUTO_AZIENDALE
 }
 
 # --- 3. ENDPOINT FLASK ---
@@ -58,7 +59,7 @@ def home():
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    # CONTROLLO AGGIUNTIVO: Se il client non è stato inizializzato, restituisci un errore chiaro
+    # CONTROLLO: Se il client non è stato inizializzato per problemi di API Key, blocca qui.
     if client is None:
         return jsonify({'error': 'Errore di configurazione del server (API Key non valida o mancante).'}), 503
 
