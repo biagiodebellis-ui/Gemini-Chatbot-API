@@ -6,10 +6,8 @@ from google.generativeai.types import HarmCategory, HarmBlockThreshold
 
 # --- CONFIGURAZIONE API KEY E MODELLO ---
 # Assicurati che GEMINI_API_KEY sia impostata come variabile d'ambiente su Render
-# (Settings -> Environment -> Add Environment Variable)
 API_KEY = os.environ.get("GEMINI_API_KEY")
 if not API_KEY:
-    # Fallback se non è configurata (solo per test locali)
     raise ValueError("GEMINI_API_KEY non trovata nelle variabili d'ambiente.")
 
 genai.configure(api_key=API_KEY)
@@ -17,6 +15,7 @@ genai.configure(api_key=API_KEY)
 # Usa un modello veloce per la chat
 MODEL_NAME = "gemini-2.5-flash" 
 
+# --- SISTEMA PROMPT AGGIORNATO (PRIORITÀ AI DATI DINAMICI) ---
 sistema_prompt = """
 SEI IL CHIEF ASSISTANT OPERATIVO E HR PARTNER DE "LA SERRA".
 Nome: SerraBot.
@@ -55,9 +54,6 @@ Fornisci un contatto solo se la richiesta è chiaramente associata a una necessi
 app = Flask(__name__)
 CORS(app) # Abilita CORS per permettere chiamate dal tuo frontend (Altervista)
 
-# Inizializzazione della chat history e configurazione
-# Utilizziamo una sessione unica per ogni richiesta, come avevi impostato,
-# ma definiamo il SYSTEM_PROMPT in modo chiaro.
 
 @app.route('/chat', methods=['POST'])
 def chat():
@@ -71,15 +67,15 @@ def chat():
         # Inizializza il modello con il prompt di sistema
         client = genai.Client()
         
-        # Uso del sistema_instruction
+        # USO CORRETTO: Passa la variabile locale 'sistema_prompt'
         config = genai.types.GenerateContentConfig(
-            system_instruction=SYSTEM_PROMPT,
+            system_instruction=sistema_prompt, 
             # Configurazione di sicurezza standard
             safety_settings=[
-                HarmCategory.HARM_CATEGORY_HARASSMENT, HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-                HarmCategory.HARM_CATEGORY_HATE_SPEECH, HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-                HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-                HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+                (HarmCategory.HARM_CATEGORY_HARASSMENT, HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE),
+                (HarmCategory.HARM_CATEGORY_HATE_SPEECH, HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE),
+                (HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE),
+                (HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE),
             ]
         )
 
