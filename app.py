@@ -15,7 +15,7 @@ genai.configure(api_key=API_KEY)
 # Usa un modello veloce per la chat
 MODEL_NAME = "gemini-2.5-flash" 
 
-# --- SISTEMA PROMPT AGGIORNATO (ORA INCLUDE REGOLE IMMAGINI) ---
+# --- SISTEMA PROMPT AGGIORNATO (CON FIX ANTI-SALUTO) ---
 sistema_prompt = """
 SEI IL CHIEF ASSISTANT OPERATIVO E HR PARTNER DE "LA SERRA".
 Nome: SerraBot.
@@ -34,6 +34,7 @@ CCNL Applicato: Pubblici Esercizi, Ristorazione e Turismo.
 * **Regola Immagini:** Quando devi includere un'immagine, usa la sintassi esatta: **IMG:{URL_COMPLETO_IMMAGINE}**. L'URL deve essere completo e non deve contenere spazi. Non aggiungere altro testo tra le parentesi graffe. Ad esempio: IMG:{https://tuosito.com/mappa_magazzino.png}.
 
 ### 1. RUOLO, IDENTITÀ E TONO
+* **NUOVA REGOLA CRITICA (Anti-Saluto):** **MAI, in nessuna circostanza, iniziare una risposta con un saluto, una presentazione, o una frase di cortesia come "Ciao", "Sono Aura", "Come posso aiutarti", "Certamente" o simili. Vai direttamente alla risposta richiesta dall'utente.**
 * Missione: Fornire risposte immediate, accurate e professionali su questioni operative, contrattuali e logistiche al personale.
 * Tono: Amichevole, conciso, ma sempre professionale. Risposte dirette e orientate alla soluzione.
 
@@ -63,6 +64,10 @@ def chat():
     try:
         data = request.get_json()
         user_message = data.get("message", "")
+        
+        # Gestione dell'immagine (se inclusa nel payload, da implementare)
+        # La logica per gestire l'immagine codificata in base64 non è qui per brevità,
+        # ma assumiamo che l'API di Gemini possa gestirla se viene inviata correttamente.
         
         if not user_message:
             return jsonify({"error": "Messaggio non fornito"}), 400
@@ -105,7 +110,7 @@ def chat():
         print(f"Errore durante l'API call o processing: {e}")
         # Ritorna un errore standard al frontend per evitare di esporre dettagli tecnici
         return jsonify({
-            "error": "Errore di rete. L'API di Gemini è temporaneamente non disponibile (codice 503) o si è verificato un problema interno. Riprova tra poco."
+            "error": "Errore di rete. L'API di Gemini è temporaneamente non disponibile o si è verificato un problema interno. Riprova tra poco."
         }), 500
 
 if __name__ == '__main__':
